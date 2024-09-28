@@ -3,8 +3,9 @@
 \documentclass[10pt,twocolumn,letterpaper]{article}
 
 %%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
-% \usepackage{cvpr}              % To produce the CAMERA-READY version
-\usepackage[]{cvpr}      % To produce the REVIEW version
+\usepackage{cvpr}              % To produce the CAMERA-READY version
+\usepackage{cvpr}
+% \usepackage[review]{cvpr}      % To produce the REVIEW version
 % \usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
 
 % Import additional packages in the preamble file, before hyperref
@@ -26,36 +27,56 @@
 \def\confYear{2025}
 
 %%%%%%%%% TITLE - PLEASE UPDATE
-\title{\LaTeX\ Author Guidelines for \confName~Proceedings}
+\title{Detecting Toxic Content from Social Media using LLMs}
 
 %%%%%%%%% AUTHORS - PLEASE UPDATE
-\author{First Author\\
-Institution1\\
-Institution1 address\\
-{\tt\small firstauthor@i1.org}
-% For a paper whose authors are all at the same institution,
-% omit the following lines up until the closing ``}''.
-% Additional authors and addresses can be added with ``\and'',
-% just like the second author.
-% To save space, use either the email address or home page, not both
-\and
-Second Author\\
-Institution2\\
-First line of institution2 address\\
-{\tt\small secondauthor@i2.org}
+% \author{First Author\\
+% Institution1\\
+% Institution1 address\\
+% {\tt\small firstauthor@i1.org}
+% % For a paper whose authors are all at the same institution,
+% % omit the following lines up until the closing ``}''.
+% % Additional authors and addresses can be added with ``\and'',
+% % just like the second author.
+% % To save space, use either the email address or home page, not both
+% \and
+% Second Author\\
+% Institution2\\
+% First line of institution2 address\\
+% {\tt\small secondauthor@i2.org}
+% }
+
+\author{
+  Naman Chhibbar \\
+  {\tt \small ma21btech11011@iith.ac.in}
+  \and
+  Shubham Vishwakarma \\
+  {\tt \small ma21btech11020@iith.ac.in}
+  \and
+  Kaustubh Dandegaonkar \\
+  {\tt \small ma21btech11003@iith.ac.in}
+  \and
+  Saradhi Kartheek \\
+  {\tt \small ma21btech11015@iith.ac.in}
+  \and
+  Manoj Kumar \\
+  {\tt \small es21btech11010@iith.ac.in}
 }
+
+\affiliation{ab}
 
 \begin{document}
 \maketitle
 
-\input{sections/abstract.tex}
-\input{sections/introduction.tex}
-\input{sections/problem.tex}
-\input{sections/related-works.tex}
-\input{sections/datasets.tex}
-\input{sections/methodology.tex}
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/problem}
+\input{sections/related-works}
+\input{sections/datasets}
+\input{sections/challenges}
+\input{sections/methodology}
+\input{sections/conclusion}
 
-\nocite{*}
 \bibliographystyle{ieeenat_fullname}
 \bibliography{anthology}
 
