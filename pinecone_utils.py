@@ -1,5 +1,4 @@
 from pinecone import Pinecone
-from pinecone.data.index import Index
 
 
 class Pinecone_DB:
