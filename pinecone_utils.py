@@ -63,6 +63,7 @@ def embed(
 
 def query(
   text: str,
+  pc: Pinecone,
   index: Index,
   n: int = 3
 ) -> list[dict]:
@@ -79,7 +80,7 @@ def query(
   """
 
   # Embed the text
-  embedding = embed([text])[0]["values"]
+  embedding = embed([text], pc)[0]["values"]
 
   # Query the Pinecone index
   response = index.query(
