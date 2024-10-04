@@ -24,7 +24,7 @@ class Pinecone_DB:
     # Connect to index
     self.index = self.pc.Index(index_name)
 
-    self.id = self.index.describe_index_stats().total_vector_count
+    self.num_vectors = self.index.describe_index_stats().total_vector_count
   
   def embed(
     self,
@@ -51,7 +51,7 @@ class Pinecone_DB:
 
     # Extract embeddings from response
     embeddings = [{
-      "id": str(self.id + i),
+      "id": str(self.num_vectors + i),
       "values": embedding.values,
       "metadata": {"text": text}
     } for i, (text, embedding) in enumerate(zip(texts, response))
@@ -77,7 +77,7 @@ class Pinecone_DB:
     self.index.upsert(embeddings)
 
     # Update id
-    self.id += len(embeddings)
+    self.num_vectors += len(embeddings)
 
   def query(
     self,
@@ -110,3 +110,11 @@ class Pinecone_DB:
     matches = [match.metadata["text"] for match in response.matches]
 
     return matches
+  
+  def delete_vectors(self) -> None:
+    """
+    Delete all vectors from the Pinecone index.
+    """
+
+    self.index.delete([str(i) for i in range(self.num_vectors)])
+    self.num_vectors = 0
