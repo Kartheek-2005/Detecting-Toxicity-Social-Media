@@ -1,3 +1,24 @@
 \section{Related Work}
+\citet{wang2022toxicity} analyzes few approaches to detect toxicity in the text. Let \textbf{x} be the testing text and \textbf{y} be a label for class of texts like toxic or benign. \\ 
+\textbf{Embedding similarity}\\
+It uses similarity between embedding of testing text \textbf{x} and a description of \textbf{y}, denoted by \textbf{d(y)}, to predict if \textbf{x} is toxic.  
+Let \textbf{E} be the embedding function, we check \textit{sim}(\textbf{E}(x),\textbf{E}(\textbf{d}(\textbf{y}))) (i.e cosine similarity) to determine the class \textbf{y} for which \textbf{d(y)} is "closest" to \textbf{x}.\\
+The testing text is flagged as toxic if its embedding is closer to the “toxic" description than the “benign description", and vice versa. \\
+\noindent \textbf{Prompt-based Generative Classification}\\
+Classification is done in a generative way. We use an LLM $(P_M)$ in this approach. For \textbf{y} we generate positive prompt ($y_p$) and negative prompt ($y_n$) \\
+$y_p$ : Write a text that contains \textbf{y}. \\
+$y_n$ : Write a text that doesn’t contain \textbf{y}. \\
+The likelihood score of LLM generating \textbf{x} conditioned on \textbf{y} is given by $s\left(y^p\right)=\sum_{t=1}^T \log p_M\left(x_t \mid y^p, x_{<t}\right)$ where $p_M\left(x_t \mid y^p, x_{<t}\right)$ is the probability of LLM generating $x_t$ conditioned on prev generated text $x_{<t}$ and $y_p$.\\
+We can see $p(y \mid x)=\frac{e^{s\left(y^p\right)}}{e^{s\left(y^p\right)}+e^{s\left(y^n\right)}}$
+The idea is if $x$ contains toxicity $y$, we expect $p_M\left(x \mid y^p\right)>p_M\left(x \mid y^n\right)$, i.e. $p(y \mid x)>0.5$. \\
 
-To be filled.
+\noindent \citet{zhang2024efficient} uses bootstrapping i.e selectively re-prompting LLMs with more fine-grained context to detect the toxicity in the text. The LLM is prompted to check if the text is toxic and from its response we check the "confidence" in its answer and use it to re-prompt the LLM until a threshold of "confidence" is reached. We can further improve the efficiency and results by "distilliing" LLM tasks to smaller student LMs and finetune these student LMs.
+
+
+
+
+
+
+
+
+
