@@ -1,3 +1,9 @@
 \section{Proposed Methods}
-
-To be filled.
+\textbf{Clustering Based Toxicity Detection
+}
+\begin{itemize}
+    \item This approach maintains a vector database of toxic examples.
+    \item When we get a new input, we use the vector database to extract $k$-nearest-neighbors toxic examples.
+    \item We then use these examples for $k$-shot prompting. 
+    \item For classification, we can either use a transformer with a classifier head or an API call to an LLM (for example, GPT) to get a "yes" or "no" output.
+\end{itemize}
