@@ -61,7 +61,8 @@ class Pinecone_DB:
   
   def upsert(
     self,
-    texts: list[str]
+    texts: list[str],
+    namespace: str = ""
   ) -> None:
     """
     Insert a list of texts into the Pinecone index.
@@ -74,7 +75,7 @@ class Pinecone_DB:
     embeddings = self.embed(texts)
 
     # Insert embeddings into Pinecone index
-    self.index.upsert(embeddings)
+    self.index.upsert(embeddings, namespace)
 
     # Update id
     self.num_vectors += len(embeddings)
@@ -82,7 +83,8 @@ class Pinecone_DB:
   def query(
     self,
     text: str,
-    n: int = 3
+    n: int = 3,
+    namespace: str = ""
   ) -> list[dict]:
     """
     Query the Pinecone index and get the top matches.
@@ -102,6 +104,7 @@ class Pinecone_DB:
     response = self.index.query(
       vector = embedding,
       top_k = n,
+      namespace = namespace,
       include_values = False,
       include_metadata = True
     )
@@ -111,10 +114,13 @@ class Pinecone_DB:
 
     return matches
   
-  def delete_vectors(self) -> None:
+  def delete_vectors(
+    self,
+    namespace: str = ""
+  ) -> None:
     """
     Delete all vectors from the Pinecone index.
     """
 
-    self.index.delete([str(i) for i in range(self.num_vectors)])
+    self.index.delete(delete_all=True, namespace=namespace)
     self.num_vectors = 0
