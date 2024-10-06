@@ -114,7 +114,6 @@ class Pinecone_DB:
       vector = embedding,
       top_k = n,
       namespace = namespace,
-      include_values = False,
       include_metadata = True
     )
 
