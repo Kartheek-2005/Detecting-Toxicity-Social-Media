@@ -9,11 +9,12 @@ __pycache__/
 *.aux
 *.bbl
 *.blg
+*.brf
 *.fdb_latexmk
 *.fls
 *.log
 *.out
-*.synctex*
+*.synctex.gz
 *.nav
 *.snm
 *.toc
