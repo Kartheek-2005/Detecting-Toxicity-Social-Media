@@ -1,7 +1,7 @@
 from pinecone import Pinecone
 
 
-class Pinecone_DB:
+class PineconeInterface:
   """
   Class to interact with Pinecone API.
 
