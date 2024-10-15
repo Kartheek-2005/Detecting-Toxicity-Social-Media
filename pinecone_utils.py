@@ -46,8 +46,8 @@ class Pinecone_DB:
     # API call to Pinecone
     response = self.pc.inference.embed(
       "multilingual-e5-large",
-      inputs = texts,
-      parameters = {"input_type": "passage"}
+      inputs=texts,
+      parameters={"input_type": "passage"}
     )
 
     # Extract embeddings from response
@@ -72,11 +72,11 @@ class Pinecone_DB:
     :param str = "" namespace: Namespace to insert the vectors.
     """
 
-    # Embed the texts
-    embeddings = self.embed(texts)
-
     # Get start id
     start_id = self.num_vectors.get(namespace, 0)
+
+    # Embed the texts
+    embeddings = self.embed(texts, start_id)
 
     # Insert embeddings into Pinecone index
     self.index.upsert(embeddings, namespace)
@@ -105,10 +105,10 @@ class Pinecone_DB:
 
     # Query the Pinecone index
     response = self.index.query(
-      vector = embedding,
-      top_k = n,
-      namespace = namespace,
-      include_metadata = True
+      vector=embedding,
+      top_k=n,
+      namespace=namespace,
+      include_metadata=True
     )
 
     # Get matches
