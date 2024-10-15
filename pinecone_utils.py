@@ -71,9 +71,8 @@ class Pinecone_DB:
     """
     Insert a list of texts into the Pinecone index.
     
-    Parameters:
-      texts (list[str]): List of texts to embed.
-      namespace (str, default = ""): Namespace to insert the vectors.
+    :param list[str] texts: List of texts to embed.
+    :param str = "" namespace: Namespace to insert the vectors.
     """
 
     # Embed the texts
@@ -97,13 +96,11 @@ class Pinecone_DB:
     """
     Query the Pinecone index and get the top matches.
 
-    Parameters:
-      text (str): Query text.
-      n (int, default = 3): Number of matches to return.
-      namespace (str, default = ""): Namespace to query.
-    
-    Returns:
-      `matches`: List of matching texts.
+    :param str text: Query text.
+    :param int = 3 n: Number of matches to return.
+    :param str = "" namespace: Namespace to query.
+  
+    :return matches: List of matching texts.
     """
 
     # Embed the text
@@ -129,8 +126,7 @@ class Pinecone_DB:
     """
     Delete all vectors from the Pinecone index.
 
-    Parameters:
-      namespace (str, default = ""): Namespace to delete vectors from.
+    :param str = "" namespace: Namespace to delete vectors from.
     """
 
     self.index.delete(delete_all=True, namespace=namespace)
