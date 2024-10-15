@@ -5,9 +5,8 @@ class Pinecone_DB:
   """
   Class to interact with Pinecone API.
 
-  Parameters:
-    api_key (str): Pinecone API key.
-    index_name (str): Name of the index to connect to.
+  :param str api_key: Pinecone API key.
+  :param str index_name: Name of the index to connect to.
   """
 
   def __init__(
@@ -38,12 +37,10 @@ class Pinecone_DB:
     """
     Embed a list of texts using a Pinecone inference model.
     
-    Parameters:
-      texts (list[str]): List of texts to embed.
-      start_id (int, default = 0): Starting ID for the embeddings.
+    :param list[str] texts: List of texts to embed.
+    :param int = 0 start_id: Starting ID for the embeddings.
 
-    Returns:
-      embeddings (list[dict]): List of dicts to upsert in Pinecone index.
+    :returns embeddings (list[dict]): List of dicts to upsert in Pinecone index.
     """
 
     # API call to Pinecone
@@ -100,7 +97,7 @@ class Pinecone_DB:
     :param int = 3 n: Number of matches to return.
     :param str = "" namespace: Namespace to query.
   
-    :return matches: List of matching texts.
+    :returns matches (list[dict]): List of matching texts.
     """
 
     # Embed the text
