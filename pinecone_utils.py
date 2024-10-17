@@ -89,7 +89,7 @@ class PineconeInterface:
     text: str,
     n: int = 3,
     namespace: str = ""
-  ) -> list[dict]:
+  ) -> list[str]:
     """
     Query the Pinecone index and get the top matches.
 
@@ -97,7 +97,7 @@ class PineconeInterface:
     :param int = 3 n: Number of matches to return.
     :param str = "" namespace: Namespace to query.
   
-    :returns matches (list[dict]): List of matching texts.
+    :returns matches (list[str]): List of matching texts.
     """
 
     # Embed the text
