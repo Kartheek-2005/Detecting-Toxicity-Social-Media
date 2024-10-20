@@ -1,4 +1,5 @@
 import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from pinecone_utils import PineconeInterface
 
@@ -8,8 +9,8 @@ class Pipeline:
 
   def __init__(
     self,
-    model,
-    tokenizer,
+    model: AutoModelForSequenceClassification,
+    tokenizer: AutoTokenizer,
     pc: PineconeInterface,
     toxic_namespace: str,
     benign_namespace: str,
