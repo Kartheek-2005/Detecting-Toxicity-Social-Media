@@ -1,5 +1,5 @@
-from math import ceil
 from itertools import batched
+import subprocess
 
 import numpy as np
 import torch
@@ -9,6 +9,44 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from .pinecone_utils import PineconeInterface
+
+
+
+def gpu_usage() -> list[int]:
+	"""
+	Get the current GPU memory usage.
+	"""
+
+	# Get output from nvidia-smi
+	result = subprocess.check_output([
+		"nvidia-smi",
+		"--query-gpu=memory.used",
+		"--format=csv,nounits,noheader"
+	]).decode("utf-8").strip()
+
+	# Extract memory used by GPUs in MiB
+	gpu_memory = [int(mem) for mem in result.split("\n")]
+
+	return gpu_memory
+
+
+def get_device(threshold: int | float = 500) -> str:
+	"""
+	Returns a device with memory usage below `threshold`.
+	"""
+
+  # Check if CUDA is available
+	if torch.cuda.is_available():
+		usage = gpu_usage()
+		cuda_ind = np.argmin(usage)
+		return f"cuda:{cuda_ind}" if usage[cuda_ind] < threshold else "cpu"
+
+  # Check if MPS is available
+	if torch.backends.mps.is_available():
+		usage = torch.mps.driver_allocated_memory() / 1e6
+		return "mps" if usage < threshold else "cpu"
+
+	return "cpu"
 
 
 
@@ -158,6 +196,7 @@ class Trainer(Prompter):
     batch_size: int,
     epochs: int,
     num_samples: int = 0,
+    device: str = "cpu"
   ) -> None:
     
     # Create prompts
@@ -191,12 +230,16 @@ class Trainer(Prompter):
 
     # Train model
     self.model.train()
-    for _ in range(epochs):
+    self.model.to(device)
+    for epoch in range(epochs):
 
       # Track total epoch loss
       epoch_loss = 0
 
-      for inputs in batches:
+      for ind, inputs in enumerate(batches):
+
+        # Move inputs to device
+        inputs = inputs.to(device)
 
         # Get loss
         loss = self.model(**inputs).loss
@@ -207,7 +250,18 @@ class Trainer(Prompter):
         self.optimizer.step()
         self.optimizer.zero_grad()
 
+        print(
+          f"Epoch [{epoch + 1}/{epochs}] Batch [{ind + 1}/{num_batches}] Loss [{loss.item(): .4f}]",
+          end="\r"
+        )
+
       epoch_loss /= num_batches
+
+      print(f"Epoch [{epoch + 1}/{epochs}] Loss [{epoch_loss}]")
 
       # Update learning rate
       self.scheduler.step(epoch_loss)
+    
+    # Move model back to CPU
+    self.model.to("cpu")
+    self.model.eval()
