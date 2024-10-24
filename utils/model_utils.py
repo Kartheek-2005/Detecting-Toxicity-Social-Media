@@ -75,7 +75,11 @@ class Prompter:
     
     # Check if num_samples is valid
     if num_samples <= 0:
-      return text
+      return self.prompt_template.format(
+        text=text,
+        toxic="",
+        benign=""
+      ).strip()
     
     # Check if Pinecone interface is given
     assert self.pc, "Pinecone not connected"
@@ -119,7 +123,8 @@ class Pipeline(Prompter):
     pc: PineconeInterface | None = "",
     toxic_namespace: str = "",
     benign_namespace: str = "",
-    prompt_template: str = "{text}"
+    prompt_template: str = "{text}",
+    device: str = "cpu"
   ) -> None:
     
     super().__init__(
@@ -129,35 +134,41 @@ class Pipeline(Prompter):
       benign_namespace,
       prompt_template
     )
-    self.model = model
+    self.model = model.to(device)
+    self.device = device
   
   def __call__(
     self,
-    text: str,
-    add_to_pinecone: bool = False,
-    num_samples: int = 3
+    texts: list[str],
+    num_samples: int = 2,
+    add_to_pinecone: bool = False
   ) -> float:
     
     # Create prompt
-    prompt = self.create_prompt(text, num_samples)
+    prompts = [self.create_prompt(text, num_samples) for text in texts]
 
     # Tokenize prompt
-    inputs = self.tokenizer(prompt, return_tensors="pt")
+    inputs = self.tokenizer(
+      prompts,
+      return_tensors="pt",
+      padding=True,
+      truncation=True
+    ).to(self.device)
 
     # Get model output
     outputs = self.model(**inputs)
 
     # Get probability of toxic class
     probs = F.softmax(outputs.logits, dim=-1)
-    toxic_prob = probs[0, 1].item()
+    toxic_prob = probs[:, 1].tolist()
 
     # Add to Pinecone if mentioned
-    if add_to_pinecone:
-      self.pc.upsert(
-        text=text,
-        namespace=self.toxic_namespace if toxic_prob > 0.5
-        else self.benign_namespace
-      )
+    # if add_to_pinecone:
+    #   self.pc.upsert(
+    #     texts=text,
+    #     namespace=self.toxic_namespace if toxic_prob > 0.5
+    #     else self.benign_namespace
+    #   )
 
     return toxic_prob
   
