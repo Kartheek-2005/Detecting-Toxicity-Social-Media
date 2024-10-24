@@ -17,10 +17,10 @@ class Prompter:
   def __init__(
     self,
     tokenizer: AutoTokenizer,
-    pc: PineconeInterface,
-    toxic_namespace: str,
-    benign_namespace: str,
-    prompt_template: str
+    pc: PineconeInterface | None = None,
+    toxic_namespace: str = "",
+    benign_namespace: str = "",
+    prompt_template: str = "{text}"
   ) -> None:
     
     self.tokenizer = tokenizer
@@ -38,6 +38,9 @@ class Prompter:
     # Check if num_samples is valid
     if num_samples <= 0:
       return text
+    
+    # Check if Pinecone interface is given
+    assert self.pc, "Pinecone not connected"
     
     # Get toxic and benign examples from Pinecone
     toxic_examples = self.pc.query(
@@ -75,10 +78,10 @@ class Pipeline(Prompter):
     self,
     model: AutoModelForSequenceClassification,
     tokenizer: AutoTokenizer,
-    pc: PineconeInterface,
-    toxic_namespace: str,
-    benign_namespace: str,
-    prompt_template: str
+    pc: PineconeInterface | None = "",
+    toxic_namespace: str = "",
+    benign_namespace: str = "",
+    prompt_template: str = "{text}"
   ) -> None:
     
     super().__init__(
@@ -128,12 +131,12 @@ class Trainer(Prompter):
     self,
     model: AutoModelForSequenceClassification,
     tokenizer: AutoTokenizer,
-    pc: PineconeInterface,
-    toxic_namespace: str,
-    benign_namespace: str,
-    prompt_template: str,
     optimizer: Optimizer,
-    scheduler: ReduceLROnPlateau
+    scheduler: ReduceLROnPlateau,
+    pc: PineconeInterface | None = None,
+    toxic_namespace: str = "",
+    benign_namespace: str = "",
+    prompt_template: str = "{text}"
   ) -> None:
     
     super().__init__(
