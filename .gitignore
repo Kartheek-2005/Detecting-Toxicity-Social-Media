@@ -2,6 +2,7 @@ temp*
 *.pdf
 .venv
 .env
+configs.py
 
 .DS_Store
 __pycache__/
