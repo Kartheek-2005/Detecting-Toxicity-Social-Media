@@ -1,5 +1,5 @@
-from collections.abc import Iterable
 from math import ceil
+from itertools import batched
 
 import numpy as np
 import torch
@@ -146,37 +146,48 @@ class Trainer(Prompter):
       benign_namespace,
       prompt_template
     )
+
     self.model = model
     self.optimizer = optimizer
     self.scheduler = scheduler
-  
+
   def train(
     self,
-    texts: Iterable[str],
-    labels: Iterable[int],
+    texts: list[str],
+    labels: list[int],
     batch_size: int,
     epochs: int,
-    num_samples: int = 0
+    num_samples: int = 0,
   ) -> None:
     
     # Create prompts
-    prompts = [
-      self.create_prompt(text, num_samples)
-      for text in texts
-    ]
+    prompts = [self.create_prompt(text, num_samples) for text in texts]
 
     # Tokenize prompts
     tokenized = self.tokenizer(prompts)["input_ids"]
     tokenized = np.array(tokenized, dtype=object)
 
     # Dynamically batch texts
-    ind = np.argsort([len(ids) for ids in tokenized])
-    batches_ind = (
-      ind[i : i+batch_size]
-      for i in range(0, len(ind), batch_size)
-    )
-    num_batches = ceil(len(texts) / batch_size)
-    labels = torch.tensor(labels, dtype=torch.float32)
+    inds = np.argsort([len(ids) for ids in tokenized])
+    labels = torch.tensor(labels, dtype=torch.long)
+    batches = []
+    for ind in batched(inds, batch_size):
+
+      # Convert ind to list to sample from numpy array
+      ind = list(ind)
+
+      # Get input_ids and labels
+      ids = tokenized[ind].tolist()
+      batch_labels = labels[ind]
+
+      # Pad input_ids
+      inputs = self.tokenizer.pad({"input_ids": ids}, return_tensors="pt")
+      inputs["labels"] = batch_labels
+
+      # Add to batches
+      batches.append(inputs)
+
+    num_batches = len(batches)
 
     # Train model
     self.model.train()
@@ -185,12 +196,7 @@ class Trainer(Prompter):
       # Track total epoch loss
       epoch_loss = 0
 
-      for ind in batches_ind:
-
-        # Get batch
-        batch = tokenized[ind]
-        inputs = self.tokenizer.pad(batch, return_tensors="pt")
-        inputs["labels"] = labels[ind]
+      for inputs in batches:
 
         # Get loss
         loss = self.model(**inputs).loss
