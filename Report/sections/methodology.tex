@@ -1,12 +1,42 @@
 \section{Proposed Methods}
-\subsection{Clustering Based Toxicity Detection
-}
-\begin{itemize}
-    \item This approach maintains a vector database of toxic examples.
-    \item When we get a new input, we use the vector database to extract $k$-nearest-neighbors toxic examples.
-    \item We then use these examples for $k$-shot prompting. 
-    \item For classification, we can either use a transformer with a classifier head or an API call to an LLM (for example, GPT) to get a "yes" or "no" output.
-\end{itemize}
+
+
+\subsection{Toxicity Detection with KNNs}
+
+This approach is based on the few-shot prompting method for classification.
+Few-shot prompting means we provide the model with some examples for the task it is being trained on.
+This is a powerful tool used with transformer models to improve their performance significantly.
+Research has shown that transformers can utilize their pre-trained knowledge more efficiently when provided with some examples in the prompt.
+
+The downside of few-shot prompting is that the user has to manually add a relevant example in the prompt.
+Our approach automates this task to detect toxic content.
+We utilize vector databases to find similar toxic and benign examples for a given text.
+Moreover, the database is also updated with the latest texts the model identifies during inference, which means the model updates its memory each time it sees a new text.
+
+A vector database stores vector representation of unstructured data.
+We have an option to "query" the database with a given vector to find its nearest neighbours or similar vectors.
+The vector embeddings for text and image data are formed using encoder-only transformer models.
+We use Pinecone as our vector database.
+
+We experiment with different numbers of examples to be extracted from the database and report our results in \autoref{tab:results}.
+Below table contains the probabilities of toxicity in text
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+{\textbf{text}} & \multicolumn{3}{c|}{\textbf{k-shot prompting}} \\ \cline{2-4} 
+& \textbf{0 - shot} & \textbf{2 - shot} & \textbf{4 - shot} \\ \hline
+I will stab you in the back& 0.99648 & 0.99969 & 0.99972\\ \hline
+I will kill animals& 0.98987 & 0.99955 & 0.99970 \\ \hline
+you can suck my ... & 0.99685 & 0.99934 & 0.99948 \\ \hline
+\end{tabular}
+\caption{Toxicity with k-shot prompting}
+\label{tab:results}
+\end{table}
+We can see our approach of k-shot prompting helps us detect the toxicity better.
+
+
 \subsection{Toxicity-Attended Roberta Classification}
 In this approach, we build upon the architecture of the \textit{unitary/unbiased-toxic-roberta} model, introducing key modifications to enhance its focus on offensive content. While the original model features an attention mechanism in its encoder block, we introduce an additional attention layer specifically designed to attend to the context surrounding offensive language (c.f figure \ref{fig:models-diff}).
 
