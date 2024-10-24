@@ -1,3 +1,4 @@
+from time import sleep
 from itertools import batched
 import subprocess
 
@@ -156,7 +157,8 @@ class Pipeline(Prompter):
     ).to(self.device)
 
     # Get model output
-    outputs = self.model(**inputs)
+    with torch.no_grad():
+      outputs = self.model(**inputs)
 
     # Get probability of toxic class
     probs = F.softmax(outputs.logits, dim=-1)
@@ -211,7 +213,11 @@ class Trainer(Prompter):
   ) -> None:
     
     # Create prompts
-    prompts = [self.create_prompt(text, num_samples) for text in texts]
+    # prompts = [self.create_prompt(text, num_samples) for text in texts]
+    prompts = []
+    for text in texts:
+      prompts.append(self.create_prompt(text, num_samples))
+      sleep(0.1)    
 
     # Tokenize prompts
     tokenized = self.tokenizer(prompts)["input_ids"]
