@@ -257,7 +257,7 @@ class Trainer(Prompter):
 
       epoch_loss /= num_batches
 
-      print(f"Epoch [{epoch + 1}/{epochs}] Loss [{epoch_loss}]")
+      print(f"Epoch [{epoch + 1}/{epochs}] Loss [{epoch_loss: .4f}]")
 
       # Update learning rate
       self.scheduler.step(epoch_loss)
