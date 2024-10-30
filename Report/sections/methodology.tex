@@ -44,22 +44,25 @@ For this new attention block, we utilize a curated list of profane words from CM
 
 By incorporating this toxicity-attended attention layer, we aim to improve the model's ability to accurately classify toxic and non-toxic content with heightened sensitivity to harmful language patterns.
 
-\begin{figure}[h]
+\begin{figure*}[t] 
     \centering
-    \begin{subfigure}[b]{0.45\linewidth} 
+    \begin{subfigure}[h]{0.47\linewidth} 
         \centering
         \includegraphics[width=\linewidth]{Images/Screenshot_20241023_113542_Miro.jpg}
         \caption{Original unitary/unbiased-toxic-roberta model}
         \label{fig:org-model}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.45\linewidth} 
+    \hspace{0.02\linewidth} % Small space between subfigures
+    \begin{subfigure}[h]{0.47\linewidth} 
         \centering
         \includegraphics[width=\linewidth]{Images/Screenshot_20241023_113521_Miro.jpg}
         \caption{Toxic-attended roberta model}
         \label{fig:modified-model}
     \end{subfigure}
-    
     \caption{Comparison between the original unitary/unbiased-toxic-roberta model and the modified Toxic-attended Roberta model}
-    \label{fig:main-figure}
-\end{figure}
+    \label{fig:models-diff}
+\end{figure*}
+
+
+
+
