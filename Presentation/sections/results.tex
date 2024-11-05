@@ -1,0 +1,55 @@
+\section{Implementation}
+
+
+\subsection{Preprocessing}
+
+\begin{frame}{Data Preprocessing}
+
+  \begin{itemize}
+    \item Remove hyperlinks because they do not contribute to the toxicity of a sentence. Done using \texttt{re.sub(r"https?://[\textasciicircum \textbackslash s]+", "", text)}.
+    \item Retain numbers and emojis since they may denote intentions or have a hidden meaning.
+    \item Strip whitespace off from the boundaries of the text using \texttt{text.strip()}.
+    \item Concatenate multiple white spaces (due to removal of hyperlinks) using \texttt{re.sub(r"\textbackslash s+", " ", text)}
+  \end{itemize}
+  
+\end{frame}
+
+
+\subsection{Methods}
+
+\begin{frame}{Method Implementation Details}
+
+  \begin{itemize}
+    \item Developed an end-to-end pipeline to classify texts.
+    \item We use RoBERTa (a variation of BERT) \citep{liu2019roberta} from Hugging Face for sequence classification and Pinecone as our vector database.
+    \item Created a custom interface class to interact with Pinecone API with two major functions: \texttt{pinecone.upsert} to insert text embeddings and \texttt{pinecone.query} to query the database with a text embedding.
+    \item Implemented the code to update the database during inference.
+  \end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Results}
+
+  \begin{itemize}
+    \item We tested our pipeline with $k \in \{0, 2, 4\}$ for k-shot prompting.
+    \item $k = 0$ indicates using only the text with no prompt engineering.
+  \end{itemize}
+
+  \begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+      \hline
+      \textbf{Text} & \multicolumn{3}{c|}{\textbf{Toxicity}} \\
+      \cline{2-4} & \textbf{0 - shot} & \textbf{2 - shot} & \textbf{4 - shot} \\
+      \hline
+      I will stab you in the back& 0.99648 & 0.99969 & 0.99972 \\
+      \hline
+      I will kill animals& 0.98987 & 0.99955 & 0.99970 \\
+      \hline
+      you can suck ... & 0.99685 & 0.99934 & 0.99948 \\
+      \hline
+    \end{tabular}
+    \caption{Toxicity with k-shot prompting}
+  \end{table}
+    
+\end{frame}
