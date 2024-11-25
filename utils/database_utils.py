@@ -52,9 +52,9 @@ class Database:
       self.embeddings = np.empty((0, Database.n_features))
 
     # Initialize the NearestNeighbors model
-    self.knn = NearestNeighbors(n_neighbors=self.n_neighbors, metric=metric)
+    self.nn = NearestNeighbors(n_neighbors=self.n_neighbors, metric=metric)
     if(len(self.texts) > 0):
-      self.knn.fit(self.embeddings)
+      self.nn.fit(self.embeddings)
   
   def __del__(self) -> None:
     '''
@@ -101,7 +101,7 @@ class Database:
 
     # Update the NearestNeighbors model
     if(len(self.texts) > 0):
-      self.knn.fit(self.embeddings)
+      self.nn.fit(self.embeddings)
 
     # Save the updated data to the data file
     self.data_fp.truncate(0)
@@ -127,7 +127,7 @@ class Database:
     embeddings = Database.embed(q_texts)
 
     # Find the nearest neighbors
-    _, indices = self.knn.kneighbors(embeddings, n_neighbors=self.n_neighbors)
+    _, indices = self.nn.kneighbors(embeddings, n_neighbors=self.n_neighbors)
 
     # Get texts
     return [self.get_texts(i) for i in indices]
