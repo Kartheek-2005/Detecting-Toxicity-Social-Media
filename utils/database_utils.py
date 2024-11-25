@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from sentence_transformers import SentenceTransformer
 
-class Database:
+class DatabaseInterface:
   '''
   Database class to handle all database operations.
 
