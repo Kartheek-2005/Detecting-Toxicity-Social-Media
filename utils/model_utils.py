@@ -1,4 +1,3 @@
-from time import sleep
 from itertools import batched
 import subprocess
 
