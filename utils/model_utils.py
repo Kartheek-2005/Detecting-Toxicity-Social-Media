@@ -55,63 +55,45 @@ class Prompter:
 
   def __init__(
     self,
-    tokenizer: AutoTokenizer,
-    pc: PineconeInterface | None = None,
-    toxic_namespace: str = "",
-    benign_namespace: str = "",
+    toxic_db: DatabaseInterface,
+    benign_db: DatabaseInterface,
     prompt_template: str = "{text}"
   ) -> None:
-    
-    self.tokenizer = tokenizer
-    self.pc = pc
-    self.toxic_namespace = toxic_namespace
-    self.benign_namespace = benign_namespace
+
+    self.toxic_db = toxic_db
+    self.benign_db = benign_db
     self.prompt_template = prompt_template
 
-  def create_prompt(
+  def create_prompts(
     self,
-    text: str,
-    num_samples: int = 3
-  ) -> str:
-    
-    # Check if num_samples is valid
-    if num_samples <= 0:
-      return self.prompt_template.format(
-        text=text,
-        toxic="",
-        benign=""
-      ).strip()
-    
-    # Check if Pinecone interface is given
-    assert self.pc, "Pinecone not connected"
+    texts: list[str]
+  ) -> list[str]:
     
     # Get toxic and benign examples from Pinecone
-    toxic_examples = self.pc.query(
-      text=text,
-      n=num_samples,
-      namespace=self.toxic_namespace
-    )
-    benign_examples = self.pc.query(
-      text=text,
-      n=num_samples,
-      namespace=self.benign_namespace
-    )
+    toxic_examples = self.toxic_db.query(texts)
+    benign_examples = self.benign_db.query(texts)
 
-    # Format examples and text
-    text = f"\n\nText:\n{text}"
-    toxic_examples = f"\n\nToxic Examples:\n{"\n".join(toxic_examples)}" \
-      if toxic_examples else ""
-    benign_examples = f"\n\nBenign Examples:\n{"\n".join(benign_examples)}" \
-      if benign_examples else ""
+    # Create prompts
+    prompts = []
+    for text, toxic, benign in zip(texts, toxic_examples, benign_examples):
 
-    # Create prompt
-    prompt = self.prompt_template.format(
-      text=text,
-      toxic=toxic_examples,
-      benign=benign_examples
-    ).strip()
+      # Format text and examples
+      text = f"\n\nText:\n{text}"
+      toxic = f"\n\nToxic Examples:\n{"\n".join(toxic)}" \
+        if toxic else ""
+      benign = f"\n\nBenign Examples:\n{"\n".join(benign)}" \
+        if benign else ""
 
-    return prompt
+      # Create prompt
+      prompt = self.prompt_template.format(
+        text=text,
+        toxic=toxic,
+        benign=benign
+      ).strip()
+    
+      prompts.append(prompt)
+
+    return prompts
 
 
 
@@ -121,34 +103,27 @@ class Pipeline(Prompter):
     self,
     model: AutoModelForSequenceClassification,
     tokenizer: AutoTokenizer,
-    pc: PineconeInterface | None = "",
-    toxic_namespace: str = "",
-    benign_namespace: str = "",
+    toxic_db: DatabaseInterface,
+    benign_db: DatabaseInterface,
     prompt_template: str = "{text}",
     device: str = "cpu"
   ) -> None:
     
-    super().__init__(
-      tokenizer,
-      pc,
-      toxic_namespace,
-      benign_namespace,
-      prompt_template
-    )
+    super().__init__(toxic_db, benign_db, prompt_template)
     self.model = model.to(device)
+    self.tokenizer = tokenizer
     self.device = device
   
   def __call__(
     self,
     texts: list[str],
-    num_samples: int = 2,
-    add_to_pinecone: bool = False
+    add_threshold: float = 0
   ) -> float:
     
-    # Create prompt
-    prompts = [self.create_prompt(text, num_samples) for text in texts]
+    # Create prompts
+    prompts = self.create_prompts(texts)
 
-    # Tokenize prompt
+    # Tokenize prompts
     inputs = self.tokenizer(
       prompts,
       return_tensors="pt",
@@ -162,17 +137,20 @@ class Pipeline(Prompter):
 
     # Get probability of toxic class
     probs = F.softmax(outputs.logits, dim=-1)
-    toxic_prob = probs[:, 1].tolist()
+    toxic_probs = probs[:, 1].tolist()
 
-    # Add to Pinecone if mentioned
-    # if add_to_pinecone:
-    #   self.pc.upsert(
-    #     texts=text,
-    #     namespace=self.toxic_namespace if toxic_prob > 0.5
-    #     else self.benign_namespace
-    #   )
+    # Add to database if mentioned
+    if 0 < add_threshold < 1:
 
-    return toxic_prob
+      # Split toxic and benign texts
+      toxic_texts = [text for text, prob in zip(texts, toxic_probs) if prob > add_threshold]
+      benign_texts = [text for text, prob in zip(texts, toxic_probs) if prob <= add_threshold]
+
+      # Insert into the databases
+      self.toxic_db.insert(toxic_texts)
+      self.benign_db.insert(benign_texts)
+
+    return toxic_probs
   
 
 
@@ -184,21 +162,19 @@ class Trainer(Prompter):
     tokenizer: AutoTokenizer,
     optimizer: Optimizer,
     scheduler: ReduceLROnPlateau,
-    pc: PineconeInterface | None = None,
-    toxic_namespace: str = "",
-    benign_namespace: str = "",
+    toxic_db: DatabaseInterface,
+    benign_db: DatabaseInterface,
     prompt_template: str = "{text}"
   ) -> None:
     
     super().__init__(
-      tokenizer,
-      pc,
-      toxic_namespace,
-      benign_namespace,
+      toxic_db,
+      benign_db,
       prompt_template
     )
 
     self.model = model
+    self.tokenizer = tokenizer
     self.optimizer = optimizer
     self.scheduler = scheduler
 
@@ -208,16 +184,12 @@ class Trainer(Prompter):
     labels: list[int],
     batch_size: int,
     epochs: int,
-    num_samples: int = 0,
     device: str = "cpu"
   ) -> None:
     
     # Create prompts
     # prompts = [self.create_prompt(text, num_samples) for text in texts]
-    prompts = []
-    for text in texts:
-      prompts.append(self.create_prompt(text, num_samples))
-      sleep(0.1)    
+    prompts = self.create_prompts(texts)
 
     # Tokenize prompts
     tokenized = self.tokenizer(prompts)["input_ids"]
@@ -281,4 +253,3 @@ class Trainer(Prompter):
     
     # Move model back to CPU
     self.model.to("cpu")
-    self.model.eval()

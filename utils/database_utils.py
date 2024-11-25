@@ -157,7 +157,7 @@ class DatabaseInterface:
     '''
     return self.embeddings[indices]
   
-  def clear_cache(self) -> None:
+  def truncate(self) -> None:
     '''
     Clear the cache file storing the texts and embeddings.
 
@@ -227,7 +227,7 @@ class PineconeInterface:
 
     return embeddings
   
-  def upsert(
+  def insert(
     self,
     texts: list[str],
     namespace: str = ""
@@ -283,7 +283,7 @@ class PineconeInterface:
 
     return matches
   
-  def delete_vectors(
+  def truncate(
     self,
     namespace: str = ""
   ) -> None:
