@@ -6,6 +6,8 @@ from sklearn.neighbors import NearestNeighbors
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 
+
+
 class DatabaseInterface:
   '''
   Database class to handle all database operations.
