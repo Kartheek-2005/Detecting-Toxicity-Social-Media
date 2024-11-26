@@ -131,6 +131,7 @@ class Pipeline(Prompter):
     ).to(self.device)
 
     # Get model output
+    self.model.eval()
     with torch.no_grad():
       outputs = self.model(**inputs)
 
@@ -187,11 +188,10 @@ class Trainer(Prompter):
   ) -> None:
     
     # Create prompts
-    # prompts = [self.create_prompt(text, num_samples) for text in texts]
     prompts = self.create_prompts(texts)
 
     # Tokenize prompts
-    tokenized = self.tokenizer(prompts)["input_ids"]
+    tokenized = self.tokenizer(prompts, truncation=True)["input_ids"]
     tokenized = np.array(tokenized, dtype=object)
 
     # Dynamically batch texts
