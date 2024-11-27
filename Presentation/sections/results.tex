@@ -22,7 +22,7 @@
   \begin{itemize}
     \item Developed an end-to-end pipeline to classify texts.
     \item We use RoBERTa (a variation of BERT) \citep{liu2019roberta} from Hugging Face for sequence classification and Pinecone as our vector database.
-    \item Created a custom interface class to interact with Pinecone API with two major functions: \texttt{pinecone.upsert} to insert text embeddings and \texttt{pinecone.query} to query the database with a text embedding.
+    \item Created a custom interface class to interact with Pinecone API with two major functions: \texttt{pinecone.insert} to insert text embeddings and \texttt{pinecone.query} to query the database with a text embedding.
     \item Implemented the code to update the database during inference.
   \end{itemize}
     
@@ -30,26 +30,47 @@
 
 \begin{frame}{Results}
 
-  \begin{itemize}
-    \item We tested our pipeline with $k \in \{0, 2, 4\}$ for k-shot prompting.
-    \item $k = 0$ indicates using only the text with no prompt engineering.
-  \end{itemize}
+\begin{itemize}
+  \item We tested our pipeline with $k \in \{0, 2, 4\}$ for k-shot prompting.
+  \item $k = 0$ indicates using only the text with no prompt engineering.
+\end{itemize}
 
-  \begin{table}[h!]
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+  \hline
+  \textbf{Text} & \multicolumn{3}{c|}{\textbf{Toxicity}} \\
+  \cline{2-4} & \textbf{0 - shot} & \textbf{2 - shot} & \textbf{4 - shot} \\
+  \hline
+  I will stab you in the back& 0.99648 & 0.99969 & 0.99972 \\
+  \hline
+  I will kill animals& 0.98987 & 0.99955 & 0.99970 \\
+  \hline
+  you can suck ... & 0.99685 & 0.99934 & 0.99948 \\
+  \hline
+\end{tabular}
+\caption{Toxicity with k-shot prompting}
+\end{table}
+
+    
+\end{frame}
+\begin{frame}{Results}
+
+\begin{table}
     \centering
-    \begin{tabular}{|c|c|c|c|}
-      \hline
-      \textbf{Text} & \multicolumn{3}{c|}{\textbf{Toxicity}} \\
-      \cline{2-4} & \textbf{0 - shot} & \textbf{2 - shot} & \textbf{4 - shot} \\
-      \hline
-      I will stab you in the back& 0.99648 & 0.99969 & 0.99972 \\
-      \hline
-      I will kill animals& 0.98987 & 0.99955 & 0.99970 \\
-      \hline
-      you can suck ... & 0.99685 & 0.99934 & 0.99948 \\
-      \hline
+    \begin{tabular}{c|c|c|c}
+        \hline
+        \textbf{Model} & \textbf{Toxigen} & \textbf{SBIC} & \textbf{DHate} \\
+        \hline
+        ChatGPT-DToT+FS+R & \textbf{87.03} & 72.00 & 69.20 \\
+        ChatGPT-DToT+FS & 86.03 & 71.70 & 69.50 \\
+        \hline
+        RoBerta & 82.10 & 85.50 & 87.30 \\
+        RoBerta-kNNs & 82.50 & \textbf{86.27} & \textbf{89.20} \\
+         \hline
     \end{tabular}
-    \caption{Toxicity with k-shot prompting}
-  \end{table}
+    \caption{Accuracy scores on datasets}
+    \label{tab:my_label}
+\end{table}
     
 \end{frame}
