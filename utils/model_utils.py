@@ -13,40 +13,40 @@ from .database_utils import DatabaseInterface
 
 
 def gpu_usage() -> list[int]:
-	"""
+	'''
 	Get the current GPU memory usage.
-	"""
+	'''
 
 	# Get output from nvidia-smi
 	result = subprocess.check_output([
-		"nvidia-smi",
-		"--query-gpu=memory.used",
-		"--format=csv,nounits,noheader"
-	]).decode("utf-8").strip()
+		'nvidia-smi',
+		'--query-gpu=memory.used',
+		'--format=csv,nounits,noheader'
+	]).decode('utf-8').strip()
 
 	# Extract memory used by GPUs in MiB
-	gpu_memory = [int(mem) for mem in result.split("\n")]
+	gpu_memory = [int(mem) for mem in result.split('\n')]
 
 	return gpu_memory
 
 
 def get_device(threshold: int | float = 500) -> str:
-	"""
+	'''
 	Returns a device with memory usage below `threshold`.
-	"""
+	'''
 
   # Check if CUDA is available
 	if torch.cuda.is_available():
 		usage = gpu_usage()
 		cuda_ind = np.argmin(usage)
-		return f"cuda:{cuda_ind}" if usage[cuda_ind] < threshold else "cpu"
+		return f'cuda:{cuda_ind}' if usage[cuda_ind] < threshold else 'cpu'
 
   # Check if MPS is available
 	if torch.backends.mps.is_available():
 		usage = torch.mps.driver_allocated_memory() / 1e6
-		return "mps" if usage < threshold else "cpu"
+		return 'mps' if usage < threshold else 'cpu'
 
-	return "cpu"
+	return 'cpu'
 
 
 
@@ -56,7 +56,7 @@ class Prompter:
     self,
     toxic_db: DatabaseInterface,
     benign_db: DatabaseInterface,
-    prompt_template: str = "{text}"
+    prompt_template: str = '{text}'
   ) -> None:
 
     self.toxic_db = toxic_db
@@ -77,11 +77,11 @@ class Prompter:
     for text, toxic, benign in zip(texts, toxic_examples, benign_examples):
 
       # Format text and examples
-      text = f"\n\nText:\n{text}"
-      toxic = f"\n\nToxic Examples:\n{"\n".join(toxic)}" \
-        if toxic else ""
-      benign = f"\n\nBenign Examples:\n{"\n".join(benign)}" \
-        if benign else ""
+      text = f'\n\nText:\n{text}'
+      toxic = f'\n\nToxic Examples:\n{'\n'.join(toxic)}' \
+        if toxic else ''
+      benign = f'\n\nBenign Examples:\n{'\n'.join(benign)}' \
+        if benign else ''
 
       # Create prompt
       prompt = self.prompt_template.format(
@@ -104,8 +104,8 @@ class Pipeline(Prompter):
     tokenizer: AutoTokenizer,
     toxic_db: DatabaseInterface,
     benign_db: DatabaseInterface,
-    prompt_template: str = "{text}",
-    device: str = "cpu"
+    prompt_template: str = '{text}',
+    device: str = 'cpu'
   ) -> None:
     
     super().__init__(toxic_db, benign_db, prompt_template)
@@ -125,7 +125,7 @@ class Pipeline(Prompter):
     # Tokenize prompts
     inputs = self.tokenizer(
       prompts,
-      return_tensors="pt",
+      return_tensors='pt',
       padding=True,
       truncation=True
     ).to(self.device)
@@ -164,7 +164,7 @@ class Trainer(Prompter):
     scheduler: ReduceLROnPlateau,
     toxic_db: DatabaseInterface,
     benign_db: DatabaseInterface,
-    prompt_template: str = "{text}"
+    prompt_template: str = '{text}'
   ) -> None:
     
     super().__init__(
@@ -184,14 +184,14 @@ class Trainer(Prompter):
     labels: list[int],
     batch_size: int,
     epochs: int,
-    device: str = "cpu"
+    device: str = 'cpu'
   ) -> None:
     
     # Create prompts
     prompts = self.create_prompts(texts)
 
     # Tokenize prompts
-    tokenized = self.tokenizer(prompts, truncation=True)["input_ids"]
+    tokenized = self.tokenizer(prompts, truncation=True)['input_ids']
     tokenized = np.array(tokenized, dtype=object)
 
     # Dynamically batch texts
@@ -208,8 +208,8 @@ class Trainer(Prompter):
       batch_labels = labels[ind]
 
       # Pad input_ids
-      inputs = self.tokenizer.pad({"input_ids": ids}, return_tensors="pt")
-      inputs["labels"] = batch_labels
+      inputs = self.tokenizer.pad({'input_ids': ids}, return_tensors='pt')
+      inputs['labels'] = batch_labels
 
       # Add to batches
       batches.append(inputs)
@@ -239,16 +239,16 @@ class Trainer(Prompter):
         self.optimizer.zero_grad()
 
         print(
-          f"Epoch [{epoch + 1}/{epochs}] Batch [{ind + 1}/{num_batches}] Loss [{loss.item(): .4f}]",
-          end="\r"
+          f'Epoch [{epoch + 1}/{epochs}] Batch [{ind + 1}/{num_batches}] Loss [{loss.item(): .4f}]',
+          end='\r'
         )
 
       epoch_loss /= num_batches
 
-      print(f"Epoch [{epoch + 1}/{epochs}] Loss [{epoch_loss: .4f}]")
+      print(f'Epoch [{epoch + 1}/{epochs}] Loss [{epoch_loss: .4f}]')
 
       # Update learning rate
       self.scheduler.step(epoch_loss)
     
     # Move model back to CPU
-    self.model.to("cpu")
+    self.model.to('cpu')

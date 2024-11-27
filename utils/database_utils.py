@@ -1,3 +1,4 @@
+import os
 import pickle
 from collections.abc import Callable
 
@@ -43,14 +44,26 @@ class DatabaseInterface:
     '''
     self.n_neighbors = n_neighbors
 
-    # Load cached data if available
+    # Load data if available
     try:
+
       self.data_fp = open(data_path, 'rb+')
       data = pickle.load(self.data_fp)
       self.texts: list[str] = data['texts']
       self.embeddings: np.ndarray = data['embeddings']
+    
+    # Create a new data file if it doesn't exist
     except:
+
+      # Create the directory if it doesn't exist
+      dirs, _ = os.path.split(data_path)
+      if dirs:
+        os.makedirs(dirs, exist_ok=True)
+      
+      # Make new data file
       self.data_fp = open(data_path, 'wb')
+
+      # Initialize the database
       self.texts = []
       self.embeddings = np.empty((0, DatabaseInterface.n_features))
 
@@ -61,7 +74,7 @@ class DatabaseInterface:
   
   def __del__(self) -> None:
     '''
-    Close the file pointer to the cache file when the object is deleted.
+    Flushes and closes the data file when the object is deleted.
     '''
     self.data_fp.flush()
     self.data_fp.close()
@@ -147,24 +160,9 @@ class DatabaseInterface:
     '''
     return [self.texts[i] for i in indices]
   
-  def get_embeddings(self, indices: np.ndarray) -> np.ndarray:
-    '''
-    Get the embeddings corresponding to the given indices.
-
-    Args:
-      indices (np.ndarray): Indices of the embeddings to retrieve.
-
-    Returns:
-      np.ndarray: The embeddings corresponding to the given indices.
-    '''
-    return self.embeddings[indices]
-  
   def truncate(self) -> None:
     '''
-    Clear the cache file storing the texts and embeddings.
-
-    Returns:
-      None
+    Truncates the data file.
     '''
     self.data_fp.truncate(0)
   
@@ -203,28 +201,29 @@ class PineconeInterface:
     texts: list[str],
     start_id: int = 0
   ) -> list[dict[str, str | list[float] | dict[str, str]]]:
-    """
+    '''
     Embed a list of texts using a Pinecone inference model.
     
     :param list[str] texts: List of texts to embed.
     :param int = 0 start_id: Starting ID for the embeddings.
 
     :returns embeddings (list[dict]): List of dicts to upsert in Pinecone index.
-    """
+    '''
 
     # API call to Pinecone
     response = self.pc.inference.embed(
-      "multilingual-e5-large",
+      'multilingual-e5-large',
       inputs=texts,
-      parameters={"input_type": "passage"}
+      parameters={'input_type': 'passage'}
     )
 
     # Extract embeddings from response
-    embeddings = [{
-      "id": str(start_id + i),
-      "values": embedding.values,
-      "metadata": {"text": text}
-    } for i, (text, embedding) in enumerate(zip(texts, response))
+    embeddings = [
+      {
+        'id': str(start_id + i),
+        'values': embedding.values,
+        'metadata': {'text': text}
+      } for i, (text, embedding) in enumerate(zip(texts, response))
     ]
 
     return embeddings
@@ -232,14 +231,14 @@ class PineconeInterface:
   def insert(
     self,
     texts: list[str],
-    namespace: str = ""
+    namespace: str = ''
   ) -> None:
-    """
+    '''
     Insert a list of texts into the Pinecone index.
     
     :param list[str] texts: List of texts to embed.
-    :param str = "" namespace: Namespace to insert the vectors.
-    """
+    :param str = '' namespace: Namespace to insert the vectors.
+    '''
 
     # Get start id
     start_id = self.num_vectors.get(namespace, 0)
@@ -257,20 +256,20 @@ class PineconeInterface:
     self,
     text: str,
     n: int = 3,
-    namespace: str = ""
+    namespace: str = ''
   ) -> list[str]:
-    """
+    '''
     Query the Pinecone index and get the top matches.
 
     :param str text: Query text.
     :param int = 3 n: Number of matches to return.
-    :param str = "" namespace: Namespace to query.
+    :param str = '' namespace: Namespace to query.
   
-    :returns matches (list[str]): List of matching texts.
-    """
+    :returns list[str]: List of matching texts.
+    '''
 
     # Embed the text
-    embedding = self.embed([text])[0]["values"]
+    embedding = self.embed([text])[0]['values']
 
     # Query the Pinecone index
     response = self.index.query(
@@ -281,19 +280,17 @@ class PineconeInterface:
     )
 
     # Get matches
-    matches = [match.metadata["text"] for match in response.matches]
-
+    matches = [match.metadata['text'] for match in response.matches]
     return matches
   
   def truncate(
     self,
-    namespace: str = ""
+    namespace: str = ''
   ) -> None:
-    """
+    '''
     Delete all vectors from the Pinecone index.
 
-    :param str = "" namespace: Namespace to delete vectors from.
-    """
-
+    :param str = '' namespace: Namespace to delete vectors from.
+    '''
     self.index.delete(delete_all=True, namespace=namespace)
     self.num_vectors[namespace] = 0
