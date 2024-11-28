@@ -5,6 +5,7 @@ temp*
 configs.py
 database/
 checkpoints/
+datasets/
 
 .DS_Store
 __pycache__/
