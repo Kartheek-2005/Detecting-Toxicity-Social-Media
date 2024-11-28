@@ -69,8 +69,10 @@ class DatabaseInterface:
 
     # Initialize the NearestNeighbors model
     self.nn = NearestNeighbors(n_neighbors=self.n_neighbors, metric=metric)
+    self.nn_fitted = False
     if(len(self.texts) > 0):
       self.nn.fit(self.embeddings)
+      self.nn_fitted = True
   
   def __del__(self) -> None:
     '''
@@ -118,6 +120,7 @@ class DatabaseInterface:
     # Update the NearestNeighbors model
     if(len(self.texts) > 0):
       self.nn.fit(self.embeddings)
+      self.nn_fitted = True
 
     # Save the updated data to the data file
     self.data_fp.truncate(0)
@@ -139,6 +142,10 @@ class DatabaseInterface:
     Returns:
       np.ndarray: Indices of the nearest neighbors for each query text, with shape (num_queries, n_neighbors).
     '''
+    # Check if the NearestNeighbors model has been fitted
+    if not self.nn_fitted:
+      return [[] for _ in q_texts]
+
     # Embed the query texts
     embeddings = DatabaseInterface.embed(q_texts)
 
