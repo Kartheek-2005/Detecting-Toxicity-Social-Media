@@ -4,6 +4,7 @@ temp*
 .env
 configs.py
 database/
+checkpoints/
 
 .DS_Store
 __pycache__/
