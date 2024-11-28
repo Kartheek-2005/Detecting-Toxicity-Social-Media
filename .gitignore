@@ -3,6 +3,7 @@ temp*
 .venv
 .env
 configs.py
+database/
 
 .DS_Store
 __pycache__/
