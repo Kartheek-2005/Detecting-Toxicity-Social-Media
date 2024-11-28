@@ -31,8 +31,8 @@ class DatabaseInterface:
 
   def __init__(
     self,
-    n_neighbors: int = 2,
     data_path: str = 'data.pkl',
+    n_neighbors: int = 2,
     metric: Callable[[np.ndarray, np.ndarray], float] = np.dot
   ) -> None:
     '''
